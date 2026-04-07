@@ -1,5 +1,4 @@
 # LeetCode Solutions (C#) - Microsoft
-
 ---
 
 ## 1. Two Sum
@@ -11,11 +10,12 @@
 ```csharp
 public int[] TwoSum(int[] nums, int target) {
     Dictionary<int,int> map = new();
-    for(int i = 0; i < nums.Length;i++){
+    for(int i = 0; i < nums.Length; i++){
         int complement = target - nums[i];
         if(map.ContainsKey(complement)){
-            return new int[]{i,map[complement]};
+            return new int[]{map[complement],i};
         }
+
         map[nums[i]] = i;
     }
     return new int[0];
@@ -36,23 +36,23 @@ public ListNode AddTwoNumbers(ListNode l1, ListNode l2) {
     ListNode cur = dummy;
     int carry = 0;
     while(l1 != null || l2 != null){
-        var v1 = l1 != null ? l1.val : 0;
-        var v2 = l2 != null ? l2.val : 0;
-        var sum = v1 + v2 + carry;
+        int v1 = l1 == null ? 0 : l1.val;
+        int v2 = l2 == null ? 0 : l2.val;
+        int sum = v1 + v2 + carry;
+        int remains = sum % 10;
         carry = sum / 10;
-        var remain = sum % 10;
-        ListNode node = new ListNode(remain);
+        ListNode node = new ListNode(remains);
         cur.next = node;
         cur = cur.next;
-
         if(l1 != null) l1 = l1.next;
         if(l2 != null) l2 = l2.next;
-    }
-    if(carry != 0){
+     }
+     if(carry != 0){
         ListNode node = new ListNode(carry);
         cur.next = node;
-    }
-    return dummy.next;
+     }
+
+     return dummy.next;
 }
 ```
 
@@ -66,15 +66,16 @@ public ListNode AddTwoNumbers(ListNode l1, ListNode l2) {
 
 ```csharp
 public int LengthOfLongestSubstring(string s) {
-    int left = 0;
     int longest = 0;
-    Dictionary<char,int> map = new();
+    int left = 0;
+    // HashSet<int> set = new();
+    Dictionary<int,int> map = new();
     for(int right = 0; right < s.Length; right++){
-        if(map.ContainsKey(s[right]) && map[s[right]] >= left){
-            left = map[s[right]] + 1;
+        if(map.ContainsKey(s[right]) && map[s[right]] >= left ){
+            left =map[s[right]] + 1;
         }
         map[s[right]] = right;
-        longest = Math.Max(longest,right - left + 1);
+        longest = Math.Max(right - left + 1,longest);
     }
 
     return longest;
@@ -91,17 +92,20 @@ public int LengthOfLongestSubstring(string s) {
 
 ```csharp
 public string Convert(string s, int numRows) {
-    if(numRows == 1 || numRows >= s.Length) return s;
-    StringBuilder[] rows = new StringBuilder[numRows];
-    for (int i = 0; i < numRows; i++) rows[i] = new StringBuilder();
-    int row = 0, dir = -1;
+    int n = s.Length;
+    if(numRows == 1 || n <= numRows) return s;
+    StringBuilder[] sbs = new StringBuilder[numRows];
+    for(int i = 0; i < numRows; i++) sbs[i] = new StringBuilder();
+    int row = 0; int dir = -1;
     foreach (char c in s) {
-        rows[row].Append(c);
-        if (row == 0 || row == numRows - 1) dir = -dir;
+        sbs[row].Append(c);
+        if(row == 0 || row == numRows - 1) dir = -dir;
         row += dir;
     }
     StringBuilder res = new();
-    foreach (StringBuilder sb in rows) res.Append(sb);
+    foreach(StringBuilder ss in sbs){
+        res.Append(ss);
+    }
     return res.ToString();
 }
 ```
@@ -161,15 +165,16 @@ public string IntToRoman(int num) {
 
 ```csharp
 public string LongestCommonPrefix(string[] strs) {
-    if (strs.Length == 0) return "";
-    string prefix = strs[0];
-    for (int i = 1; i < strs.Length; i++) {
-        while (strs[i].IndexOf(prefix) != 0) {
-            prefix = prefix.Substring(0, prefix.Length - 1);
-            if (prefix == "") return "";
+    StringBuilder sb = new StringBuilder(strs[0]);
+    int read= 0 ;
+    int n = strs.Length;
+    for(int i = 1 ; i < n; i++){
+        while(!strs[i].StartsWith(sb.ToString())){
+            sb.Remove(sb.Length- 1,1);
+            if(sb.Length == 0) return "";
         }
     }
-    return prefix;
+    return sb.ToString();
 }
 ```
 
@@ -183,23 +188,25 @@ public string LongestCommonPrefix(string[] strs) {
 
 ```csharp
 public IList<IList<int>> ThreeSum(int[] nums) {
-    IList<IList<int>> res = new List<IList<int>>();
     Array.Sort(nums);
+    IList<IList<int>> res = new List<IList<int>>();
+
     for(int i = 0; i < nums.Length - 2; i++){
-        if(i > 0 && nums[i] == nums[i-1]) continue;
+        if (nums[i] > 0) break;
         HashSet<int> set = new();
-        for(int j = i + 1; j < nums.Length; j++){
-            int complement = 0 - nums[i] - nums[j];
-            if(set.Contains(complement)){
-               res.Add(new List<int>{nums[i],nums[j],complement});
-                while(j+1 < nums.Length && nums[j] == nums[j+1]){
+        if(i > 0 && nums[i] == nums[i-1]) continue;
+        for(int j = i+1; j < nums.Length; j++){
+            int target = 0 - nums[i] - nums[j];
+            if(set.Contains(target)){
+                List<int> list = new List<int>{nums[i],nums[j],target};
+                res.Add(list);
+                while(j+ 1 < nums.Length && nums[j+1] == nums[j]){
                     j++;
                 }
             }
             set.Add(nums[j]);
         }
     }
-
     return res;
 }
 ```
@@ -215,27 +222,31 @@ public IList<IList<int>> ThreeSum(int[] nums) {
 ```csharp
 public IList<string> GenerateParenthesis(int n) {
     IList<string> res = new List<string>();
-    StringBuilder sb = new StringBuilder();
-    backTrack(res, n, 0, 0, sb);
+
+    backTrack(res,new StringBuilder(),0,0,n);
     return res;
 }
 
-public void backTrack(IList<string> res, int n, int open, int close, StringBuilder sb){
-    if(n*2 == sb.Length){
+public void backTrack(IList<string> res, StringBuilder sb, int open, int close,int n){
+    if(sb.Length == n * 2){
         res.Add(sb.ToString());
         return;
     }
 
     if(open < n){
         sb.Append('(');
-        backTrack(res,n,open+1,close,sb);
-        sb.Remove(sb.Length - 1, 1);
+        open++;
+        backTrack(res,sb,open,close,n);
+        sb.Remove(sb.Length-1,1);
+        open--;
     }
 
     if(close < open){
         sb.Append(')');
-        backTrack(res,n,open,close+1,sb);
-        sb.Remove(sb.Length - 1, 1);
+        close++;
+        backTrack(res,sb,open,close,n);
+        sb.Remove(sb.Length-1,1);
+        close--;
     }
 }
 ```
@@ -250,15 +261,14 @@ public void backTrack(IList<string> res, int n, int open, int close, StringBuild
 
 ```csharp
 public int RemoveDuplicates(int[] nums) {
-    if (nums.Length == 0) return 0;
-    int i = 0;
-    for (int j = 1; j < nums.Length; j++) {
-        if (nums[j] != nums[i]) {
-            i++;
-            nums[i] = nums[j];
+    int write = 1;
+    for(int right = 1; right < nums.Length; right++){
+        if(nums[right] != nums[right-1]){
+            nums[write] = nums[right];
+            write++;
         }
     }
-    return i + 1;
+    return write;
 }
 ```
 
@@ -272,32 +282,42 @@ public int RemoveDuplicates(int[] nums) {
 
 ```csharp
 public void NextPermutation(int[] nums) {
+    int targetLeftIndex = -1;
+    int targetRightIndex = -1;
     int n = nums.Length;
-    int i = n - 2;
-    while (i >= 0 && nums[i] >= nums[i+1]) {
-        i--;
-    }
-    if (i >= 0) {
-        int j = n - 1;
-        while (j >= 0 && nums[j] <= nums[i]) {
-            j--;
+    for(int i = n - 2; i >= 0; i--){
+        if(nums[i] < nums[i+1]){
+            targetLeftIndex = i;
+            break;
         }
-        Swap(nums, i, j);
     }
-    Reverse(nums, i + 1, n - 1);
+
+    if(targetLeftIndex == -1){
+    Reverse(nums, 0, n - 1);
+    return;
+    }
+
+    for(int i = n - 1; i > 0; i--){
+        if(nums[i] > nums[targetLeftIndex]){
+            targetRightIndex = i;
+            break;
+        }
+    }
+    Swap(nums,targetLeftIndex,targetRightIndex);
+    Reverse(nums,targetLeftIndex+1,n-1);
 }
 
-private void Swap(int[] nums, int i, int j) {
-    int temp = nums[i];
-    nums[i] = nums[j];
-    nums[j] = temp;
+public void Swap(int[] nums, int left, int right){
+    int temp = nums[left];
+    nums[left] = nums[right];
+    nums[right] = temp;
 }
 
-private void Reverse(int[] nums, int start, int end) {
-    while (start < end) {
-        Swap(nums, start, end);
-        start++;
-        end--;
+public void Reverse(int[] nums, int left, int right){
+    while(left < right){
+        Swap(nums,left,right);
+        left++;
+        right--;
     }
 }
 ```
@@ -345,22 +365,21 @@ public int Search(int[] nums, int target) {
 
 ```csharp
 public int Trap(int[] height) {
-    // monotonic stack
-    Stack<int> stack= new();
-    int maxArea =0;
-    for(int i= 0 ; i < height.Length; i++){
-        while(stack.Count > 0 && height[i] > height[stack.Peek()]){
+    // monotonic stack, from bottom to top , desc -> top is botoom;
+    Stack<int> stack = new();
+    int sum = 0;
+    for(int i = 0; i < height.Length; i++){
+        while(stack.Count != 0 &&  height[i] > height[stack.Peek()]){
             int bottom = stack.Pop();
             if(stack.Count == 0) break;
             int left = stack.Peek();
-            int area = (i - left-1) * (Math.Min(height[left], height[i]) - height[bottom]);
-            maxArea += area;
+            int h = Math.Min(height[i],height[left]) - height[bottom];
+            int area = (i - left - 1) * h;
+            sum += area;
         }
-
         stack.Push(i);
     }
-
-    return maxArea;
+    return sum;
 }
 ```
 
@@ -374,13 +393,13 @@ public int Trap(int[] height) {
 
 ```csharp
 public int Jump(int[] nums) {
-    int jumps = 0, currentEnd = 0, farthest = 0;
+    int jumps = 0, curEnd = 0, farthest = 0;
     for (int i = 0; i < nums.Length - 1; i++) {
-        farthest = Math.Max(farthest, i + nums[i]);
-        if (i == currentEnd) {
+         farthest = Math.Max(farthest, i + nums[i]);
+         if(i == curEnd){
             jumps++;
-            currentEnd = farthest;
-        }
+            curEnd = farthest;
+         }
     }
     return jumps;
 }
@@ -397,22 +416,23 @@ public int Jump(int[] nums) {
 ```csharp
 public IList<IList<int>> Permute(int[] nums) {
     IList<IList<int>> res = new List<IList<int>>();
-    Backtrack(nums, new List<int>(), new bool[nums.Length], res);
+    bool[] visited = new bool[nums.Length];
+    backTrack(nums,res, new List<int>(), visited);
     return res;
 }
 
-private void Backtrack(int[] nums, List<int> path, bool[] used, IList<IList<int>> res) {
-    if (path.Count == nums.Length) {
+public void backTrack(int[] nums, IList<IList<int>> res,List<int> path, bool[] visited){
+    if(path.Count == nums.Length){
         res.Add(new List<int>(path));
         return;
     }
-    for (int i = 0; i < nums.Length; i++) {
-        if (used[i]) continue;
-        used[i] = true;
+    for(int i = 0; i < nums.Length; i++){
+        if(visited[i]) continue;
+        visited[i] = true;
         path.Add(nums[i]);
-        Backtrack(nums, path, used, res);
+        backTrack(nums,res,path,visited);
+        visited[i] =false;
         path.RemoveAt(path.Count - 1);
-        used[i] = false;
     }
 }
 ```
@@ -514,18 +534,19 @@ private IList<string> BuildBoard(int[] queens, int n) {
 
 ```csharp
 public int[][] Merge(int[][] intervals) {
+    List<int[]> res = new();
     Array.Sort(intervals,(a,b) => a[0] - b[0]);
-    List<int[]> list = new();
 
     for(int i = 0; i < intervals.Length; i++){
-        if(list.Count == 0 || intervals[i][0] > list[list.Count-1][1]){
-            list.Add(intervals[i]);
+        if(res.Count == 0 || res[res.Count-1][1]  < intervals[i][0]){
+            res.Add(intervals[i]);
         }else{
-            list[list.Count-1][1] = Math.Max(list[list.Count-1][1],intervals[i][1]);
+            int end = Math.Max(res[res.Count-1][1] ,intervals[i][1]);
+            res[res.Count-1][1] = end;
         }
     }
 
-    return list.ToArray();
+    return res.ToArray();
 }
 ```
 
@@ -585,39 +606,60 @@ public void SetZeroes(int[][] matrix) {
 
 ```csharp
 public string MinWindow(string s, string t) {
-    if (s.Length < t.Length) return "";
+    if (s.Length == 0 || t.Length == 0) return "";
 
-    Dictionary<char, int> need = new(), window = new();
+    Dictionary<char, int> dictT = new Dictionary<char, int>();
     foreach (char c in t) {
-        need[c] = need.GetValueOrDefault(c, 0) + 1;
+        dictT[c] = dictT.GetValueOrDefault(c, 0) + 1;
     }
+    // 记录t中每个字符的需求频率
 
-    int left = 0, right = 0, valid = 0;
-    int start = 0, len = int.MaxValue;
+    int required = dictT.Count;
+    // t中不同字符的数量
+
+    int left = 0, right = 0;
+    int formed = 0;
+    // formed表示当前窗口中满足频率要求的字符种类数
+
+    Dictionary<char, int> windowCounts = new Dictionary<char, int>();
+    // 记录当前窗口中每个字符的频率
+
+    int[] ans = {-1, 0, 0};
+    // ans[0]存储最小窗口长度，ans[1]和ans[2]存储左右边界
 
     while (right < s.Length) {
         char c = s[right];
-        right++;
-        if (need.ContainsKey(c)) {
-            window[c] = window.GetValueOrDefault(c, 0) + 1;
-            if (window[c] == need[c]) valid++;
+        windowCounts[c] = windowCounts.GetValueOrDefault(c, 0) + 1;
+        // 将右边界字符加入窗口
+
+        if (dictT.ContainsKey(c) && windowCounts[c] == dictT[c]) {
+            formed++;
+        }
+        // 如果当前字符满足频率要求，增加formed计数
+
+        while (left <= right && formed == required) {
+            c = s[left];
+
+            if (ans[0] == -1 || right - left + 1 < ans[0]) {
+                ans[0] = right - left + 1;
+                ans[1] = left;
+                ans[2] = right;
+            }
+            // 更新最小窗口
+
+            windowCounts[c]--;
+            if (dictT.ContainsKey(c) && windowCounts[c] < dictT[c]) {
+                formed--;
+            }
+            // 移除左边界字符，如果导致不满足要求则减少formed
+
+            left++;
         }
 
-        while (valid == need.Count) {
-            if (right - left < len) {
-                start = left;
-                len = right - left;
-            }
-            char d = s[left];
-            left++;
-            if (need.ContainsKey(d)) {
-                if (window[d] == need[d]) valid--;
-                window[d]--;
-            }
-        }
+        right++;
     }
 
-    return len == int.MaxValue ? "" : s.Substring(start, len);
+    return ans[0] == -1 ? "" : s.Substring(ans[1], ans[0]);
 }
 ```
 
@@ -654,19 +696,18 @@ public ListNode DeleteDuplicates(ListNode head) {
 ```csharp
 public Dictionary<int,int> map = new();
 int preIndex = 0;
-
 public TreeNode BuildTree(int[] preorder, int[] inorder) {
     for(int i = 0; i < inorder.Length; i++) map[inorder[i]] = i;
-    return Dfs(preorder, 0, inorder.Length - 1);
+     return dfs(preorder, 0, inorder.Length - 1);
 }
 
-public TreeNode Dfs(int[] preorder, int left, int right) {
+public TreeNode dfs(int[] preorder, int left, int right) {
     if (left > right) return null;
-    int rootVal = preorder[preIndex++];
+     int rootVal = preorder[preIndex++];
     TreeNode root = new TreeNode(rootVal);
     int mid = map[rootVal];
-    root.left = Dfs(preorder, left, mid -1);
-    root.right = Dfs(preorder, mid + 1, right);
+    root.left = dfs(preorder, left, mid -1);
+    root.right = dfs(preorder, mid + 1, right);
     return root;
 }
 ```
@@ -681,16 +722,13 @@ public TreeNode Dfs(int[] preorder, int left, int right) {
 
 ```csharp
 public int MaxProfit(int[] prices) {
-    int max = 0;
-    int minPrice = prices[0];
+    int lowPrice = prices[0];
+    int maxProfit = 0;
     for(int i = 1; i < prices.Length; i++){
-        if(minPrice > prices[i]){
-            minPrice = prices[i];
-        }else{
-            max = Math.Max(prices[i]-minPrice,max);
-        }
+        maxProfit = Math.Max(maxProfit, prices[i] - lowPrice);
+        lowPrice = Math.Min(lowPrice, prices[i]);
     }
-    return max;
+    return maxProfit;
 }
 ```
 
@@ -704,14 +742,21 @@ public int MaxProfit(int[] prices) {
 
 ```csharp
 public bool IsPalindrome(string s) {
-    int left = 0, right = s.Length - 1;
-    while (left < right) {
-        while (left < right && !char.IsLetterOrDigit(s[left])) left++;
-        while (left < right && !char.IsLetterOrDigit(s[right])) right--;
-        if (char.ToLower(s[left]) != char.ToLower(s[right])) return false;
+    int left = 0;
+    int right = s.Length -1;
+
+    while(left < right){
+        while(left < right && !char.IsLetterOrDigit(s[left])){
+            left++;
+        }
+        while(left < right && !char.IsLetterOrDigit(s[right])){
+            right--;
+        }
+        if(char.ToLower(s[left]) != char.ToLower(s[right])) return false;
         left++;
         right--;
     }
+
     return true;
 }
 ```
@@ -752,52 +797,63 @@ public bool WordBreak(string s, IList<string> wordDict) {
 **Problem:** Design a data structure that follows the constraints of a Least Recently Used (LRU) cache. Implement the `LRUCache` class with `get` and `put` operations in O(1) time complexity.
 
 ```csharp
-public class Node{
-    public int key;
-    public int val;
-    public Node(int key, int val){
-        this.key = key;
-        this.val = val;
+public interface IEvictionPolicy {
+    void OnAccess(int key);
+    void OnInsert(int key);
+    int Evict();
+}
+
+public class LRUPolicy : IEvictionPolicy {
+    private LinkedList<int> _list = new();
+    private Dictionary<int, LinkedListNode<int>> _map = new();
+
+    public void OnAccess(int key) {
+        if (_map.ContainsKey(key)) {
+            _list.Remove(_map[key]);
+            _map[key] = _list.AddFirst(key);
+        }
+    }
+
+    public void OnInsert(int key) {
+        var node = _list.AddFirst(key);
+        _map[key] = node;
+    }
+
+    public int Evict() {
+        var last = _list.Last.Value;
+        _list.RemoveLast();
+        _map.Remove(last);
+        return last;
     }
 }
 
 public class LRUCache {
-    int _capacity;
-    Dictionary<int,LinkedListNode<Node>> _map;
-    LinkedList<Node> _list;
+    private int _capacity;
+    private Dictionary<int, int> _store = new();
+    private IEvictionPolicy _policy;
 
     public LRUCache(int capacity) {
         _capacity = capacity;
-        _map = new();
-        _list = new();
+        _policy = new LRUPolicy();
     }
 
     public int Get(int key) {
-        if(_map.ContainsKey(key)){
-            var node = _map[key];
-            _list.Remove(node);
-            _list.AddFirst(node);
-            return node.Value.val;
-        }else{
-            return -1;
-        }
+        if (!_store.ContainsKey(key)) return -1;
+        _policy.OnAccess(key);
+        return _store[key];
     }
 
     public void Put(int key, int value) {
-        if(_map.ContainsKey(key)){
-            var node = _map[key];
-            node.Value.val = value;
-            _list.Remove(node);
-            _list.AddFirst(node);
-        }else{
-            if(_map.Count == _capacity){
-                var tail = _list.Last;
-                _map.Remove(tail.Value.key);
-                _list.Remove(tail);
+        if (_store.ContainsKey(key)) {
+            _store[key] = value;
+            _policy.OnAccess(key);
+        } else {
+            if (_store.Count == _capacity) {
+                int evicted = _policy.Evict();
+                _store.Remove(evicted);
             }
-            var node = new Node(key,value);
-            var first = _list.AddFirst(node);
-            _map[key] = first;
+            _store[key] = value;
+            _policy.OnInsert(key);
         }
     }
 }
@@ -868,41 +924,50 @@ public IList<int> RightSideView(TreeNode root) {
 
 ```csharp
 public int NumIslands(char[][] grid) {
-    int n = grid.Length;
-    int m = grid[0].Length;
-    bool[,] visit = new bool[n,m];
-    int island = 0;
-    for(int i = 0; i < n; i++){
-        for(int j = 0; j < m; j++){
-            if(grid[i][j] == '1' && !visit[i,j]){
-                island++;
-                Bfs(grid,visit,i,j,n,m);
+    if (grid == null || grid.Length == 0) {
+        return 0;
+        // 处理空网格的边界情况
+    }
+    int count = 0;
+    // 岛屿计数器
+    int m = grid.Length;
+    // 网格行数
+    int n = grid[0].Length;
+    // 网格列数
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            // 遍历网格的每个位置
+            if (grid[i][j] == '1') {
+                count++;
+                // 发现新岛屿，计数+1
+                DFS(grid, i, j);
+                // 使用DFS标记整个岛屿
             }
         }
     }
-    return island;
+    return count;
+    // 返回岛屿总数
 }
 
-public void Bfs(char[][] grid, bool[,] visit, int i, int j, int n, int m){
-    Queue<int[]> q = new();
-    q.Enqueue(new int[]{i,j});
-    int[][] dirs = new int[][] {
-        new int[] {0, 1},
-        new int[] {1, 0},
-        new int[] {-1, 0},
-        new int[] {0, -1}
-    };
-
-    while(q.Count != 0){
-        int[] cur = q.Dequeue();
-        foreach(int[] dir in dirs){
-            int x = dir[0] + cur[0];
-            int y = dir[1] + cur[1];
-            if(x < 0 || y < 0 || x >=n || y >= m || visit[x,y] || grid[x][y] == '0') continue;
-            visit[x,y] = true;
-            q.Enqueue(new int[]{x,y});
-        }
+private void DFS(char[][] grid, int i, int j) {
+    int m = grid.Length;
+    // 网格行数
+    int n = grid[0].Length;
+    // 网格列数
+    if (i < 0 || i >= m || j < 0 || j >= n || grid[i][j] == '0') {
+        return;
+        // 边界检查和水域检查
     }
+    grid[i][j] = '0';
+    // 标记当前位置为已访问（改为水域）
+    DFS(grid, i - 1, j);
+    // 向上搜索
+    DFS(grid, i + 1, j);
+    // 向下搜索
+    DFS(grid, i, j - 1);
+    // 向左搜索
+    DFS(grid, i, j + 1);
+    // 向右搜索
 }
 ```
 
@@ -916,19 +981,19 @@ public void Bfs(char[][] grid, bool[,] visit, int i, int j, int n, int m){
 
 ```csharp
 public bool IsHappy(int n) {
-    HashSet<int> set = new();
-
+    HashSet<int> seen = new();
     while(n != 1){
-        if(set.Contains(n)) return false;
-        set.Add(n);
-        int cur = 0;
-        while(n>0){
-            int temp = n % 10;
-            cur += temp * temp;
-            n = n /10;
+        if(seen.Contains(n)) return false;
+        seen.Add(n);
+        int newNumber = 0;
+        while(n > 0){
+            int remains = n % 10;   // 19 -> 9
+            newNumber += remains * remains;
+            n = n / 10;
         }
-        n = cur;
+        n = newNumber;
     }
+
     return true;
 }
 ```
@@ -945,11 +1010,17 @@ public bool IsHappy(int n) {
 public ListNode ReverseList(ListNode head) {
     ListNode prev = null;
     ListNode cur = head;
+    // prev 1 2
+    // 2 1 prev.   cur = 2
+    // null<-1   prev 2 3
+    // cur 2 prev;
+    // null <- 1 <- 2.   cur = 3;
+    // null
     while(cur != null){
-        ListNode nextStep = cur.next;
-        cur.next = prev;
-        prev = cur;
-        cur = nextStep;
+       ListNode nextNode = cur.next;
+       cur.next = prev;
+       prev = cur;
+       cur = nextNode;
     }
     return prev;
 }
@@ -1064,38 +1135,37 @@ public int Calculate(string s) {
 
 ```csharp
 public class MyQueue {
-    private Stack<int> stackIn;
-    private Stack<int> stackOut;
-
+    Stack<int> inStack;
+    Stack<int> outStack;
     public MyQueue() {
-        stackIn = new Stack<int>();
-        stackOut = new Stack<int>();
+        inStack = new();
+        outStack = new();
     }
 
     public void Push(int x) {
-        stackIn.Push(x);
+        inStack.Push(x);
     }
 
     public int Pop() {
-        if (stackOut.Count == 0) {
-            while (stackIn.Count > 0) {
-                stackOut.Push(stackIn.Pop());
+        if(outStack.Count == 0){
+            while(inStack.Count > 0){
+                outStack.Push(inStack.Pop());
             }
         }
-        return stackOut.Pop();
+        return outStack.Pop();
     }
 
     public int Peek() {
-        if (stackOut.Count == 0) {
-            while (stackIn.Count > 0) {
-                stackOut.Push(stackIn.Pop());
+        if(outStack.Count == 0){
+            while(inStack.Count > 0){
+                outStack.Push(inStack.Pop());
             }
         }
-        return stackOut.Peek();
+        return outStack.Peek();
     }
 
     public bool Empty() {
-        return stackIn.Count == 0 && stackOut.Count == 0;
+        return inStack.Count == 0 && outStack.Count == 0;
     }
 }
 ```
@@ -1113,18 +1183,19 @@ public int[] MaxSlidingWindow(int[] nums, int k) {
     if(k == 1) return nums;
     int n = nums.Length;
     int[] res = new int[n - k + 1];
+    // monotinic double end queue
     LinkedList<int> deque = new();
 
     for(int i = 0; i < n; i++){
-        while(deque.Count > 0 && deque.First.Value < i - k +1){
+        while(deque.Count > 0 && i - k + 1 > deque.First.Value){
             deque.RemoveFirst();
         }
         while(deque.Count > 0 && nums[deque.Last.Value] < nums[i]){
-            deque.RemoveLast();
+              deque.RemoveLast();
         }
         deque.AddLast(i);
-        if(i >= k -1){
-            res[i-k+1] = nums[deque.First.Value];
+        if(i - k +1  >= 0){
+            res[i - k +1] = nums[deque.First.Value];
         }
     }
     return res;
@@ -1142,6 +1213,7 @@ public int[] MaxSlidingWindow(int[] nums, int k) {
 ```csharp
 public int MinMeetingRooms(int[][] intervals) {
     Array.Sort(intervals,(a,b) => a[0] - b[0]);
+    // minHeap: the number of meetings are needed.
     PriorityQueue<int, int> minHeap = new();
     for(int i = 0; i < intervals.Length; i++){
         if(minHeap.Count == 0 || intervals[i][0] < minHeap.Peek()){
@@ -1167,32 +1239,29 @@ public int MinMeetingRooms(int[][] intervals) {
 public class MedianFinder {
     PriorityQueue<int,int> minStack;
     PriorityQueue<int,int> maxStack;
-
     public MedianFinder() {
         minStack = new();
         maxStack = new();
     }
 
     public void AddNum(int num) {
-        if(maxStack.Count == 0 || num <= maxStack.Peek()){
-            maxStack.Enqueue(num,-num);
+        if(minStack.Count == 0 || num <= minStack.Peek()){
+            minStack.Enqueue(num, num);
         }else{
-            minStack.Enqueue(num,num);
+            maxStack.Enqueue(num, -num);
         }
-        if(minStack.Count + 1 < maxStack.Count){
+        if(minStack.Count < maxStack.Count){
             int temp = maxStack.Dequeue();
-            minStack.Enqueue(temp,temp);
-        }else if(maxStack.Count < minStack.Count){
+            minStack.Enqueue(temp, -temp);
+        }else if(maxStack.Count + 1 < minStack.Count){
             int temp = minStack.Dequeue();
-            maxStack.Enqueue(temp,-temp);
+            maxStack.Enqueue(temp, temp);
         }
     }
 
     public double FindMedian() {
-        int count = minStack.Count + maxStack.Count;
-        return count % 2 == 0
-            ? (double)(minStack.Peek() + maxStack.Peek()) / 2
-            : maxStack.Peek();
+        bool isBool = (minStack.Count + maxStack.Count) % 2 == 0;
+        return isBool ? (double)(minStack.Peek() + maxStack.Peek()) / 2 : minStack.Peek();
     }
 }
 ```
@@ -1286,15 +1355,17 @@ private void AddLeaves(TreeNode node, List<int> res) {
 ```csharp
 public int SubarraySum(int[] nums, int k) {
     Dictionary<int,int> map = new();
+    int sum = 0;
+    int res = 0;
     map[0] = 1;
-    int res = 0; int sum =0;
-    foreach(int num in nums){
-        sum += num;
+    for(int i = 0; i < nums.Length;i++){
+        sum += nums[i];
         if(map.ContainsKey(sum - k)){
-            res += map[sum-k];
+            res += map[sum - k];
         }
-        map[sum] = map.GetValueOrDefault(sum,0) + 1;
+        map[sum] = map.GetValueOrDefault(sum,0)+ 1;
     }
+
     return res;
 }
 ```
@@ -1311,11 +1382,9 @@ public int SubarraySum(int[] nums, int k) {
 public int MaximumProduct(int[] nums) {
     Array.Sort(nums);
     int n = nums.Length;
-    // Either the three largest, or two smallest (most negative) and the largest
-    return Math.Max(
-        nums[n-1] * nums[n-2] * nums[n-3],
-        nums[0] * nums[1] * nums[n-1]
-    );
+    //. 三个最大正数， ｜｜ 两个最小负数 -99 -100,  一个最大正数 n-1
+    int max = Math.Max(nums[n-1] * nums[n-2] * nums[n-3],nums[0] * nums[1] * nums[n-1]);
+    return max;
 }
 ```
 
@@ -1329,24 +1398,32 @@ public int MaximumProduct(int[] nums) {
 
 ```csharp
 public bool CheckValidString(string s) {
-    var left = new Stack<int>();
-    var star = new Stack<int>();
-    for (int i = 0; i < s.Length; i++) {
-        if(s[i] == '('){
+    Stack<int> left= new();
+    Stack<int> star = new();
+
+    for(int i = 0; i < s.Length; i++){
+        char c = s[i];
+        if(c == '('){
             left.Push(i);
-        }else if(s[i] == '*'){
-            star.Push(i);
+        }else if(c == ')'){
+            if(left.Count > 0){
+                left.Pop();
+            }else if(star.Count > 0){
+                star.Pop();
+            }else{
+                return false;
+            }
         }else{
-            if(left.Count > 0) left.Pop();
-            else if (star.Count > 0) star.Pop();
-            else return false;
+            star.Push(i);
         }
     }
     while(left.Count > 0 && star.Count > 0){
-        if(left.Pop() > star.Pop()) return false;
+        if(left.Peek() > star.Peek()) return false;
+        left.Pop();
+        star.Pop();
     }
 
-    return left.Count == 0;
+     return left.Count == 0;
 }
 ```
 
@@ -1450,13 +1527,12 @@ public bool Canfinish(int[] piles, int h, int k){
 
 ```csharp
 public int[][] IntervalIntersection(int[][] firstList, int[][] secondList) {
-    List<int[]> res = new();
     int i = 0; int j = 0;
-
-    while (i < firstList.Length && j < secondList.Length) {
+    List<int[]> res = new();
+    while(i < firstList.Length && j < secondList.Length){
         int start = Math.Max(firstList[i][0],secondList[j][0]);
-        int end = Math.Min(firstList[i][1], secondList[j][1]);
-        if(start <= end) res.Add(new int[]{start,end});
+        int end = Math.Min(firstList[i][1],secondList[j][1]);
+        if (start <= end) res.Add(new int[]{ start, end });
         if(firstList[i][1] < secondList[j][1]){
             i++;
         }else{
@@ -1478,10 +1554,10 @@ public int[][] IntervalIntersection(int[][] firstList, int[][] secondList) {
 ```csharp
 public int[] FinalPrices(int[] prices) {
     Stack<int> stack = new();
-    for(int i = 0; i < prices.Length; i++){
-        while(stack.Count > 0 && prices[stack.Peek()] >= prices[i]){
-            int idx = stack.Pop();
-            prices[idx] -= prices[i];
+    for(int i = 0; i < prices.Length;i++){
+        while(stack.Count != 0 && prices[i] <= prices[stack.Peek()]){
+            int index = stack.Pop();
+            prices[index] = prices[index] -  prices[i];
         }
         stack.Push(i);
     }
